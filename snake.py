@@ -1,7 +1,7 @@
 import random
+import os
 
 
-direction = "w"
 board = []
 snake = []
 head = (0,0)
@@ -21,7 +21,7 @@ def Init():
 head = Init()
 
 
-def Render():
+def Render(board):
     for x in range(10):
         for y in range(10):
             if not board[x][y].isdigit():
@@ -31,11 +31,18 @@ def Render():
         print("")
 
 
-def Move(head, direction):
+def Move(snake, direction, board):
+    head = snake[0]
+    neck = 0
+
+    if len(snake) > 1:
+        neck = snake[1]
+
     if direction == "a":
         head = (head[0], head[1] - 1)
         if head[1] < 0:
             head = (head[0], 9)
+
     if direction == "w":
         head = (head[0] -1, head[1])
         if head[0] < 0:
@@ -50,41 +57,82 @@ def Move(head, direction):
         head = (head[0] + 1, head[1])
         if head[0] > 9:
             head = (0, head[1])
-    return head
+
+    if head == neck:
+        return snake
+
+    if board[head[0]][head[1]] == "b" and head != snake[-1]:
+        snake = "Q"
+        return snake
+
+    if board[head[0]][head[1]] == "p":
+        snake = snake[::-1]
+        snake.append(head)
+        snake = snake[::-1]
+        SpawnPickup(snake)
+
+    else:
+        snake = snake[::-1]
+        snake.append(head)
+        snake = snake[::-1]
+        snake.pop()
+
+    return snake
 
 
 def Update(head):
     board[head[0]][head[1]] = str(head[1])
     head = Move(head)
     board[head[0]][head[1]] = "h"
-    Render()
+    Render(board)
     return head
 
-def UserUpdate(head):
-    direction = input("enter: ")
+
+def UserUpdate(board, snake):
+    direction = "w"
+    controls = ['w','a','s','d','q']
+    head = snake[0]
     while direction != "q":
-        board[head[0]][head[1]] = str(head[1])
-        head = Move(head,direction)
-        board[head[0]][head[1]] = "h"
-        Render()
         direction = input("enter: ")
-    return head
+        if direction not in controls:
+            continue
+        snake = Move(snake, direction, board)
+        head = snake[0]
+
+        if snake == "Q":
+            print("game over")
+            return
+
+        for x in range(10):
+            for y in range(10):
+                if(board[x][y] != "p"):
+                    board[x][y] = str(y)
+
+        for b in snake:
+            board[b[0]][b[1]] = "b"
+
+        board[head[0]][head[1]] = "h"
+
+        os.system('cls||clear')
+        Render(board)
+
+
+    print("Thank you for playing, goodbye!")
 
 
 def SpawnPickup(snake):
     tiles = []
     for x in range(10):
         for y in range(10):
-            if board[x][y] != 'h' and board[x][y] != 'p':
+            if board[x][y] != 'h' and board[x][y] != 'b':
                 temp = (x, y)
                 tiles.append(temp)
-    pickup = random.randint(0, len(tiles))
+    pickup = random.randint(0, len(tiles) - 1)
     board[tiles[pickup][0]][tiles[pickup][1]] = "p"
 
 
 SpawnPickup(snake)
-SpawnPickup(snake)
-Render()
-head = UserUpdate(head)
+Render(board)
+UserUpdate(board,snake)
 
 print(head)
