@@ -1,6 +1,7 @@
 import random
 import os
-
+import math
+import time
 
 board = []
 snake = []
@@ -120,6 +121,107 @@ def UserUpdate(board, snake):
     print("Thank you for playing, goodbye!")
 
 
+def FindPickup(board):
+    for x in range(10):
+        for y in range(10):
+            if(board[x][y] == "p"):
+                return (x,y)
+
+
+def Bot(board, snake):
+    direction = "w"
+
+    head = snake[0]
+    destination = (0,0)
+    destination = FindPickup(board)
+
+    while direction != "q":
+
+        destination = FindPickup(board)
+        snake = Move(snake, PathScores(board, snake, destination), board)
+        head = snake[0]
+
+        if snake == "Q":
+            print("game over")
+            return
+
+        for x in range(10):
+            for y in range(10):
+                if(board[x][y] != "p"):
+                    board[x][y] = str(y)
+
+        for b in snake:
+            board[b[0]][b[1]] = "b"
+
+        board[head[0]][head[1]] = "h"
+
+        os.system('cls||clear')
+        Render(board)
+
+        time.sleep(0.25)
+
+
+    print("Thank you for playing, goodbye!")
+
+
+def Distance(x, y):
+    tempX = abs(x[0] - y[0])
+    tempY = abs(x[1] - y[1])
+    return (tempX + tempY)
+
+
+def PathScores(board, snake, destination):
+    tiles = []
+    for x in range(10):
+        tiles.append([])
+        for y in range(10):
+            tiles[x].append(Distance(destination,(x,y)))
+            if(board[x][y] == "b"):
+                tiles[x][y] = 999
+    for x in tiles:
+        print(x)
+    controls = ['w','s','a','d']
+    scores = []
+
+    head = snake[0]
+
+    if len(snake) > 1:
+        tiles[snake[1][0]][snake[1][1]] = 1100
+
+    # up
+    upCoord = (head[0] -1, head[1])
+    if upCoord[0] < 0:
+        scores.append(1000)
+    else:
+        scores.append(tiles[upCoord[0]][upCoord[1]])
+
+    # down
+    downCoord = (head[0] + 1, head[1])
+    if downCoord[0] > 9:
+        scores.append(1000)
+    else:
+        scores.append(tiles[downCoord[0]][downCoord[1]])
+
+    # left
+    leftCoord = (head[0], head[1] - 1)
+    if leftCoord[1] < 0:
+        scores.append(1000)
+    else:
+        scores.append(tiles[leftCoord[0]][leftCoord[1]])
+
+    # right
+    rightCoord = (head[0], head[1] + 1)
+    if rightCoord[1] > 9:
+        scores.append(1000)
+    else:
+        scores.append(tiles[rightCoord[0]][rightCoord[1]])
+
+    minScore = min(scores)
+    index = scores.index(minScore)
+    print(scores)
+    return controls[index]
+
+
 def SpawnPickup(snake):
     tiles = []
     for x in range(10):
@@ -130,9 +232,8 @@ def SpawnPickup(snake):
     pickup = random.randint(0, len(tiles) - 1)
     board[tiles[pickup][0]][tiles[pickup][1]] = "p"
 
-
 SpawnPickup(snake)
 Render(board)
-UserUpdate(board,snake)
-
+Bot(board, snake)
+# UserUpdate(board,snake)
 print(head)
